@@ -79,7 +79,7 @@ services:
     image: traffmonetizer/cli_v2
     container_name: tm
     restart: always
-    command: start accept --token \$TM_TOKEN --device-name $effectiveDevice
+    command: start accept --token ${'$'}TM_TOKEN --device-name $effectiveDevice
 """.trimIndent()
 
   val powershellCmd = "docker run -d --name tm --restart always traffmonetizer/cli_v2 start accept --token \$env:TM_TOKEN --device-name $effectiveDevice"
