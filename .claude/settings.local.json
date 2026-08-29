@@ -58,7 +58,24 @@
       "Bash(echo \"RC=$?\")",
       "Bash(echo \"rc=$?\")",
       "Bash(timeout 500 env JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 /opt/gradle-8.9/bin/gradle --version)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(curl -s \"https://productionresultssa14.blob.core.windows.net/actions-results/0e6504e9-4959-4b08-bffc-867db719b675/workflow-job-run-ffd1b673-cad6-5d67-879f-cf3f994cec11/logs/job/job-logs.txt?rsct=text%2Fplain&se=2026-08-29T10%3A06%3A46Z&sig=IJP44qhmESufaOb%2Fhnx96QokAQX8NB%2BZZr762k5SNxo%3D&ske=2026-08-29T12%3A58%3A22Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-08-29T08%3A58%3A22Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2026-08-29T09%3A56%3A41Z&sv=2025-11-05\" -o /tmp/job-logs.txt)",
+      "Bash(gh run *)",
+      "Bash(curl -s \"https://api.github.com/repos/M23jJohn/TraffMonitizer/actions/runs?per_page=5\")",
+      "Bash(curl -s \"https://api.github.com/repos/M23jJohn/TraffMonitizer/actions/runs/33246607828/jobs\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl)",
+      "Read(//data/data/com.termux/files/home/.config/**)",
+      "Read(//data/data/com.termux/files/home/.config/gh/**)",
+      "Bash(git config *)",
+      "Read(//root/**)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer config --list)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer fetch origin)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer log --oneline -3 origin/main)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer status --short)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer log --oneline -1 HEAD)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer diff HEAD origin/main --stat)",
+      "Bash(git -C /data/data/com.termux/files/home/TraffMonitizer show --stat HEAD)"
     ]
   }
 }
