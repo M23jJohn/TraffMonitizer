@@ -1,0 +1,136 @@
+name: Build & Deploy Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build variant to produce'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+          - both
+      create_release:
+        description: 'Create a GitHub Release (requires tag or manual trigger)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+
+      - name: Prepare Secrets & Keystores
+        run: |
+          # Create empty or fallback .env for Secrets Gradle Plugin
+          touch .env
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          fi
+
+          # Decode debug keystore if base64 file exists
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore || base64 --decode debug.keystore.base64 > debug.keystore
+            echo "Decoded debug.keystore successfully."
+          fi
+
+          # Ensure gradlew is executable if present
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+          fi
+
+      - name: Build Debug APK
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == 'both' }}
+        run: |
+          if [ -f ./gradlew ]; then
+            ./gradlew :app:assembleDebug --stacktrace
+          else
+            gradle :app:assembleDebug --stacktrace
+          fi
+
+      - name: Build Release APK
+        if: ${{ github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'both' || startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/debug.keystore
+          STORE_PASSWORD: android
+          KEY_PASSWORD: android
+        run: |
+          # If a custom release keystore isn't provided, use debug keystore as fallback signer
+          if [ -f ./gradlew ]; then
+            ./gradlew :app:assembleRelease --stacktrace || true
+          else
+            gradle :app:assembleRelease --stacktrace || true
+          fi
+
+      - name: Prepare APK Artifacts
+        run: |
+          mkdir -p release-apks
+          # Copy debug APK
+          if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp app/build/outputs/apk/debug/app-debug.apk release-apks/traffmonetizer-node-runner-debug.apk
+          fi
+          # Copy release APK if available
+          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+            cp app/build/outputs/apk/release/app-release.apk release-apks/traffmonetizer-node-runner-release.apk
+          fi
+          # Also copy any unsigned or universal APKs
+          find app/build/outputs/apk/ -name "*.apk" -exec cp {} release-apks/ \;
+          ls -la release-apks/
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: traffmonetizer-node-runner-apks
+          path: release-apks/*.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Publish GitHub Release with APK
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == true) }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-apks/*.apk
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

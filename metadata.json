@@ -1,0 +1,6 @@
+{
+  "name": "TraffMonetizer",
+  "description": "Android client and node runner for TraffMonetizer (traffmonetizer/cli_v2) with token management, live bandwidth sharing stats, background service, and Docker command exporter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
