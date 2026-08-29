@@ -24,8 +24,7 @@ class PreferenceManager(context: Context) {
       wifiOnly = prefs.getBoolean(KEY_WIFI_ONLY, false),
       chargingOnly = prefs.getBoolean(KEY_CHARGING_ONLY, false),
       wakeLockEnabled = prefs.getBoolean(KEY_WAKE_LOCK, true),
-      dailyLimitMb = prefs.getInt(KEY_DAILY_LIMIT, 0),
-      earningRatePerGb = prefs.getFloat(KEY_EARNING_RATE, 0.20f).toDouble()
+      dailyLimitMb = prefs.getInt(KEY_DAILY_LIMIT, 0)
     )
   }
 
@@ -38,7 +37,6 @@ class PreferenceManager(context: Context) {
       .putBoolean(KEY_CHARGING_ONLY, settings.chargingOnly)
       .putBoolean(KEY_WAKE_LOCK, settings.wakeLockEnabled)
       .putInt(KEY_DAILY_LIMIT, settings.dailyLimitMb)
-      .putFloat(KEY_EARNING_RATE, settings.earningRatePerGb.toFloat())
       .apply()
     _settingsFlow.value = settings
   }
@@ -61,6 +59,5 @@ class PreferenceManager(context: Context) {
     private const val KEY_CHARGING_ONLY = "key_charging_only"
     private const val KEY_WAKE_LOCK = "key_wake_lock"
     private const val KEY_DAILY_LIMIT = "key_daily_limit"
-    private const val KEY_EARNING_RATE = "key_earning_rate"
   }
 }

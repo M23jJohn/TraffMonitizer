@@ -65,10 +65,12 @@ fun DockerCommandCard(
   val context = LocalContext.current
   var selectedTab by remember { mutableIntStateOf(0) }
 
-  val effectiveToken = if (token.isNotBlank()) token else "YOUR_APP_TOKEN"
+  // The real token is never interpolated into any command — use the shell
+  // variable convention so the displayed command stays copy-safe.
+  val effectiveToken = "\$TM_TOKEN"
   val effectiveDevice = if (deviceName.isNotBlank()) deviceName else "vps-node-01"
 
-  val dockerRunCommand = "docker run -d --name tm --restart always traffmonetizer/cli_v2 start accept --token $effectiveToken --device-name $effectiveDevice"
+  val dockerRunCommand = "docker run -d --name tm --restart always -e TM_TOKEN=<paste token here> traffmonetizer/cli_v2 start accept --token \$TM_TOKEN --device-name $effectiveDevice"
 
   val dockerComposeYaml = """
 version: '3'
@@ -77,7 +79,7 @@ services:
     image: traffmonetizer/cli_v2
     container_name: tm
     restart: always
-    command: start accept --token $effectiveToken --device-name $effectiveDevice
+    command: start accept --token \$TM_TOKEN --device-name $effectiveDevice
 """.trimIndent()
 
   val powershellCmd = "docker run -d --name tm --restart always traffmonetizer/cli_v2 start accept --token \$env:TM_TOKEN --device-name $effectiveDevice"

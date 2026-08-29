@@ -101,8 +101,8 @@ class TraffMonetizerService : Service() {
 
         val upStr = TraffMonetizerEngine.formatSpeed(stats.currentUploadBps)
         val downStr = TraffMonetizerEngine.formatSpeed(stats.currentDownloadBps)
-        val sharedStr = TraffMonetizerEngine.formatBytes(stats.todayBytes)
-        val details = "⬆ $upStr  ⬇ $downStr • Shared: $sharedStr"
+        val sharedStr = TraffMonetizerEngine.formatBytes(stats.sessionTotalBytes)
+        val details = "⬆ $upStr  ⬇ $downStr • Session: $sharedStr"
 
         val updatedNotification = buildNotification(title, details)
         notificationManager.notify(NOTIFICATION_ID, updatedNotification)

@@ -29,7 +29,6 @@ import com.example.ui.theme.SurfaceElevated
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
-import kotlin.random.Random
 
 @Composable
 fun AddRemoteNodeDialog(
@@ -124,16 +123,17 @@ fun AddRemoteNodeDialog(
       Button(
         onClick = {
           if (nodeName.isNotBlank()) {
-            val randomTraffic = Random.nextDouble(120.0, 4800.0)
-            val randomEarnings = (randomTraffic / 1024.0) * 0.20
+            // Manually tracked external node. Traffic starts at zero — this app
+            // cannot measure a remote machine, so no plausible-looking figure is
+            // invented here. The user updates it from the remote dashboard.
             onAddNode(
               RemoteNodeEntity(
                 name = nodeName.trim(),
-                ip = if (nodeIp.isNotBlank()) nodeIp.trim() else "10.0.0.${Random.nextInt(10, 99)}",
+                ip = if (nodeIp.isNotBlank()) nodeIp.trim() else "unspecified",
                 platform = platform.trim(),
                 isOnline = true,
-                totalTrafficMb = randomTraffic,
-                estimatedEarningsUsd = randomEarnings,
+                totalTrafficMb = 0.0,
+                estimatedEarningsUsd = 0.0,
                 lastSeenTimestamp = System.currentTimeMillis()
               )
             )

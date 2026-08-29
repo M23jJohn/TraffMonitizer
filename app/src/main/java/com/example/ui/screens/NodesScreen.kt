@@ -80,11 +80,9 @@ fun NodesScreen(
   var showAddDialog by remember { mutableStateOf(false) }
 
   val totalRemoteTrafficMb = remoteNodes.sumOf { it.totalTrafficMb }
-  val totalRemoteEarnings = remoteNodes.sumOf { it.estimatedEarningsUsd }
 
-  val localTrafficMb = localStats.todayBytes / (1024.0 * 1024.0)
+  val localTrafficMb = localStats.sessionTotalBytes / (1024.0 * 1024.0)
   val combinedTrafficMb = localTrafficMb + totalRemoteTrafficMb
-  val combinedEarnings = localStats.estimatedEarningsUsd + totalRemoteEarnings
 
   Scaffold(
     modifier = modifier.fillMaxSize(),
@@ -183,10 +181,10 @@ fun NodesScreen(
                   .background(SurfaceElevated)
                   .padding(14.dp)
               ) {
-                Text("Combined Balance", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp), color = TextSecondary)
+                Text("Combined Traffic", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp), color = TextSecondary)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                  text = "$${String.format(Locale.US, "%.4f", combinedEarnings)}",
+                  text = String.format(Locale.US, "%.1f MB", combinedTrafficMb),
                   style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold),
                   color = AccentAmber
                 )
@@ -251,7 +249,7 @@ fun NodesScreen(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                  text = "Shared: ${TraffMonetizerEngine.formatBytes(localStats.todayBytes)} • Est: $${String.format(Locale.US, "%.5f", localStats.estimatedEarningsUsd)}",
+                  text = "Relayed: ${TraffMonetizerEngine.formatBytes(localStats.sessionTotalBytes)}",
                   style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                   color = TextSecondary
                 )
@@ -382,7 +380,7 @@ private fun RemoteNodeItemCard(
           }
           Spacer(modifier = Modifier.height(2.dp))
           Text(
-            text = "${node.ip} • Shared: ${String.format(Locale.US, "%.1f MB", node.totalTrafficMb)} • $${String.format(Locale.US, "%.4f", node.estimatedEarningsUsd)}",
+            text = "${node.ip} • Shared: ${String.format(Locale.US, "%.1f MB", node.totalTrafficMb)}",
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
             color = TextSecondary
           )

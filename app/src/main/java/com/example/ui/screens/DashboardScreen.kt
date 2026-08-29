@@ -159,7 +159,8 @@ fun DashboardScreen(
     item {
       HeroBalanceCard(
         status = status,
-        estimatedEarnings = stats.estimatedEarningsUsd
+        balanceUsd = stats.balanceUsd,
+        last30DaysUsd = stats.last30DaysUsd
       )
     }
 
@@ -263,8 +264,8 @@ fun DashboardScreen(
           horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
           ElegantStatCard(
-            title = "Traffic Shared Today",
-            value = TraffMonetizerEngine.formatBytes(stats.todayBytes),
+            title = "Relayed This Session",
+            value = TraffMonetizerEngine.formatBytes(stats.sessionTotalBytes),
             icon = Icons.Default.Sensors,
             modifier = Modifier.weight(1f)
           )
@@ -281,9 +282,10 @@ fun DashboardScreen(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+          // Server-reported request count; "—" until a STAT_RESPONSE arrives.
           ElegantStatCard(
-            title = "Active Relays",
-            value = "${stats.totalRequestsServed}",
+            title = "Requests Served",
+            value = stats.totalRequestsServed?.toString() ?: "—",
             icon = Icons.Default.Devices,
             modifier = Modifier.weight(1f)
           )
@@ -404,7 +406,8 @@ fun DashboardScreen(
 @Composable
 private fun HeroBalanceCard(
   status: NodeStatus,
-  estimatedEarnings: Double
+  balanceUsd: Double?,
+  last30DaysUsd: Double?
 ) {
   Card(
     modifier = Modifier.fillMaxWidth(),
@@ -429,7 +432,7 @@ private fun HeroBalanceCard(
 
       Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-          text = "Current Balance",
+          text = "Account Balance",
           style = MaterialTheme.typography.bodyMedium.copy(
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp
@@ -439,12 +442,11 @@ private fun HeroBalanceCard(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        Row(
-          verticalAlignment = Alignment.Bottom,
-          horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+        // Balance is reported by the TraffMonetizer backend (BALANCE_RESPONSE).
+        // Until it arrives there is no value to show — say so rather than print $0.00.
+        if (balanceUsd == null) {
           Text(
-            text = "$${String.format(Locale.US, "%.2f", estimatedEarnings)}",
+            text = "—",
             style = MaterialTheme.typography.displaySmall.copy(
               fontWeight = FontWeight.Bold,
               letterSpacing = (-0.5).sp
@@ -452,14 +454,40 @@ private fun HeroBalanceCard(
             color = OnPrimaryContainerLavender
           )
           Text(
-            text = "USD",
-            style = MaterialTheme.typography.labelMedium.copy(
-              fontWeight = FontWeight.Bold,
-              fontSize = 12.sp
-            ),
-            color = OnPrimaryContainerLavender.copy(alpha = 0.7f),
-            modifier = Modifier.padding(bottom = 6.dp)
+            text = "Unavailable until the node connects",
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+            color = OnPrimaryContainerLavender.copy(alpha = 0.7f)
           )
+        } else {
+          Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+          ) {
+            Text(
+              text = "$${String.format(Locale.US, "%.2f", balanceUsd)}",
+              style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.5).sp
+              ),
+              color = OnPrimaryContainerLavender
+            )
+            Text(
+              text = "USD",
+              style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+              ),
+              color = OnPrimaryContainerLavender.copy(alpha = 0.7f),
+              modifier = Modifier.padding(bottom = 6.dp)
+            )
+          }
+          if (last30DaysUsd != null) {
+            Text(
+              text = "Last 30 days: $${String.format(Locale.US, "%.2f", last30DaysUsd)}",
+              style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+              color = OnPrimaryContainerLavender.copy(alpha = 0.7f)
+            )
+          }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -475,7 +503,15 @@ private fun HeroBalanceCard(
               .background(if (status == NodeStatus.ONLINE) AccentOnline else AccentWarning)
           )
           Text(
-            text = if (status == NodeStatus.ONLINE) "Service Running: traffmonetizer-cli-v2" else "Service ${status.name.lowercase()}",
+            // This label reflects the actual connection state, not the service's existence.
+            text = when (status) {
+              NodeStatus.ONLINE -> "Connected to TraffMonetizer"
+              NodeStatus.CONNECTING -> "Connecting to TraffMonetizer..."
+              NodeStatus.PAUSED_WIFI -> "Paused: Wi-Fi only policy or no network"
+              NodeStatus.PAUSED_BATTERY -> "Paused: charging only policy"
+              NodeStatus.ERROR -> "Connection failed"
+              NodeStatus.STOPPED -> "Node stopped"
+            },
             style = MaterialTheme.typography.labelSmall.copy(
               fontWeight = FontWeight.Medium,
               fontSize = 12.sp
@@ -574,7 +610,7 @@ private fun NetworkStatusBar(
         Column {
           Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-              text = networkInfo.ipAddress,
+              text = networkInfo.ipAddress ?: "IP unavailable",
               style = MaterialTheme.typography.titleMedium.copy(
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
@@ -583,21 +619,23 @@ private fun NetworkStatusBar(
               color = TextPrimary
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Box(
-              modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(PrimaryLavender.copy(alpha = 0.15f))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
-            ) {
-              Text(
-                text = "${networkInfo.latencyMs}ms",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = PrimaryLavender
-              )
+            networkInfo.latencyMs?.let { latency ->
+              Box(
+                modifier = Modifier
+                  .clip(RoundedCornerShape(6.dp))
+                  .background(PrimaryLavender.copy(alpha = 0.15f))
+                  .padding(horizontal = 6.dp, vertical = 2.dp)
+              ) {
+                Text(
+                  text = "${latency}ms",
+                  style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                  color = PrimaryLavender
+                )
+              }
             }
           }
           Text(
-            text = "${networkInfo.networkType} • ${networkInfo.isp}",
+            text = networkInfo.networkType,
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
             color = TextSecondary
           )
