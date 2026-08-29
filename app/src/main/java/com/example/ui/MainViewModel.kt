@@ -38,11 +38,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
   init {
     TraffMonetizerEngine.init(application)
-    // Seed default sample demo node if empty so user has instant visual context
     viewModelScope.launch {
       val existing = repository.getSettings()
-      if (existing.token.isBlank()) {
-        // Set sample default device alias
+      if (existing.deviceName.isBlank()) {
         repository.updateDeviceName("Android-${android.os.Build.MODEL.take(10).replace(" ", "-")}")
       }
     }
@@ -58,7 +56,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       if (currentSettings.token.isBlank()) {
         TraffMonetizerEngine.appendLog(
           LogLevel.ERROR,
-          "No Token set! Enter your application token from TraffMonetizer Dashboard or click 'Use Demo Token' in Settings."
+          "No Application Token configured! Please paste your token from TraffMonetizer Dashboard in Settings."
         )
       } else {
         TraffMonetizerService.start(getApplication())
@@ -69,12 +67,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   fun saveSettings(newSettings: AppSettings) {
     repository.saveSettings(newSettings)
     TraffMonetizerEngine.appendLog(LogLevel.INFO, "Settings updated. Device alias: ${newSettings.deviceName}")
-  }
-
-  fun setDemoToken() {
-    val demoToken = "tm_live_79a29e8b4e13460bbd10f881f21b"
-    repository.updateToken(demoToken)
-    TraffMonetizerEngine.appendLog(LogLevel.SUCCESS, "Demo Token loaded into client settings.")
   }
 
   fun refreshNetwork() {

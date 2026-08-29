@@ -182,9 +182,9 @@ fun MainAppContent(viewModel: MainViewModel) {
             logs = logs,
             onToggleNode = { viewModel.toggleNode() },
             onRefreshNetwork = { viewModel.refreshNetwork() },
-            onSetDemoToken = { viewModel.setDemoToken() },
             onNavigateToSettings = { currentTabIndex = AppTab.SETTINGS.ordinal },
             onNavigateToTerminal = { currentTabIndex = AppTab.TERMINAL.ordinal },
+            onNavigateToDocker = { currentTabIndex = AppTab.DOCKER.ordinal },
             onClearLogs = { viewModel.clearLogs() }
           )
 

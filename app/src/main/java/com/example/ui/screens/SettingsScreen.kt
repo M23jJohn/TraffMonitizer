@@ -168,7 +168,7 @@ fun SettingsScreen(
 
             OutlinedButton(
               onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://traffmonetizer.com"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://app.traffmonetizer.com"))
                 try {
                   context.startActivity(intent)
                 } catch (_: Exception) {}
@@ -177,7 +177,7 @@ fun SettingsScreen(
               modifier = Modifier.height(32.dp),
               contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
             ) {
-              Text("Get Token", style = MaterialTheme.typography.labelSmall, color = PrimaryLavender)
+              Text("Open Dashboard", style = MaterialTheme.typography.labelSmall, color = PrimaryLavender)
               Spacer(modifier = Modifier.width(4.dp))
               Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(12.dp), tint = PrimaryLavender)
             }
@@ -191,7 +191,7 @@ fun SettingsScreen(
               token = it
               onSaveSettings(settings.copy(token = it.trim()))
             },
-            placeholder = { Text("Paste your TraffMonetizer application token", color = TextMuted) },
+            placeholder = { Text("Paste your real TraffMonetizer application token", color = TextMuted) },
             singleLine = true,
             visualTransformation = if (isTokenVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
@@ -213,7 +213,9 @@ fun SettingsScreen(
                       val text = clip.getItemAt(0).text.toString().trim()
                       token = text
                       onSaveSettings(settings.copy(token = text))
-                      Toast.makeText(context, "Token pasted!", Toast.LENGTH_SHORT).show()
+                      Toast.makeText(context, "Token pasted from clipboard!", Toast.LENGTH_SHORT).show()
+                    } else {
+                      Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
                     }
                   }
                 ) {
@@ -237,19 +239,31 @@ fun SettingsScreen(
 
           Spacer(modifier = Modifier.height(10.dp))
 
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
             Button(
               onClick = {
-                val demo = "tm_live_79a29e8b4e13460bbd10f881f21b"
-                token = demo
-                onSaveSettings(settings.copy(token = demo))
-                Toast.makeText(context, "Demo Token loaded!", Toast.LENGTH_SHORT).show()
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = clipboard.primaryClip
+                if (clip != null && clip.itemCount > 0) {
+                  val text = clip.getItemAt(0).text.toString().trim()
+                  token = text
+                  onSaveSettings(settings.copy(token = text))
+                  Toast.makeText(context, "Token saved and activated!", Toast.LENGTH_SHORT).show()
+                } else {
+                  Toast.makeText(context, "No text in clipboard", Toast.LENGTH_SHORT).show()
+                }
               },
-              colors = ButtonDefaults.buttonColors(containerColor = SurfaceElevated, contentColor = PrimaryLavender),
+              colors = ButtonDefaults.buttonColors(containerColor = PrimaryLavender, contentColor = OnPrimaryContainerLavender),
               shape = RoundedCornerShape(10.dp),
               modifier = Modifier.weight(1f)
             ) {
-              Text("Load Demo Token", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+              Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.width(6.dp))
+              Text("Paste from Clipboard", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
             }
 
             if (token.isNotEmpty()) {
@@ -257,11 +271,14 @@ fun SettingsScreen(
                 onClick = {
                   token = ""
                   onSaveSettings(settings.copy(token = ""))
+                  Toast.makeText(context, "Token cleared", Toast.LENGTH_SHORT).show()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = SurfaceElevated, contentColor = AccentError),
                 shape = RoundedCornerShape(10.dp)
               ) {
                 Icon(Icons.Default.Clear, contentDescription = "Clear Token", modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Clear", style = MaterialTheme.typography.labelSmall)
               }
             }
           }

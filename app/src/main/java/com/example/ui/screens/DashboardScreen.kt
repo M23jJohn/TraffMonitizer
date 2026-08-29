@@ -79,6 +79,11 @@ import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import java.util.Locale
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.ui.platform.LocalContext
+
 @Composable
 fun DashboardScreen(
   status: NodeStatus,
@@ -88,12 +93,13 @@ fun DashboardScreen(
   logs: List<LogEntry>,
   onToggleNode: () -> Unit,
   onRefreshNetwork: () -> Unit,
-  onSetDemoToken: () -> Unit,
   onNavigateToSettings: () -> Unit,
   onNavigateToTerminal: () -> Unit,
+  onNavigateToDocker: () -> Unit,
   onClearLogs: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val context = LocalContext.current
   LazyColumn(
     modifier = modifier
       .fillMaxSize()
@@ -170,7 +176,12 @@ fun DashboardScreen(
     if (settings.token.isBlank()) {
       item {
         NoTokenWarningCard(
-          onSetDemoToken = onSetDemoToken,
+          onOpenDashboard = {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://app.traffmonetizer.com"))
+            try {
+              context.startActivity(intent)
+            } catch (_: Exception) {}
+          },
           onGoSettings = onNavigateToSettings
         )
       }
@@ -610,7 +621,7 @@ private fun NetworkStatusBar(
 
 @Composable
 private fun NoTokenWarningCard(
-  onSetDemoToken: () -> Unit,
+  onOpenDashboard: () -> Unit,
   onGoSettings: () -> Unit
 ) {
   Card(
@@ -644,7 +655,7 @@ private fun NoTokenWarningCard(
       Spacer(modifier = Modifier.height(6.dp))
 
       Text(
-        text = "To start monetizing bandwidth and running the client, configure your application token from the TraffMonetizer dashboard.",
+        text = "Please enter your real application token from your TraffMonetizer dashboard to start sharing bandwidth and running the node.",
         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
         color = TextPrimary
       )
@@ -656,12 +667,14 @@ private fun NoTokenWarningCard(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
         Button(
-          onClick = onSetDemoToken,
+          onClick = onOpenDashboard,
           colors = ButtonDefaults.buttonColors(containerColor = PrimaryLavender, contentColor = OnPrimaryContainerLavender),
           shape = RoundedCornerShape(20.dp),
           modifier = Modifier.weight(1f)
         ) {
-          Text("Use Demo Token", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+          Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(14.dp))
+          Spacer(modifier = Modifier.width(6.dp))
+          Text("Get Real Token", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         }
 
         Button(
