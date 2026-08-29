@@ -1,0 +1,31 @@
+package androidx.compose.ui.semantics;
+
+import androidx.compose.ui.geometry.Rect;
+import java.util.Comparator;
+import kotlin.Metadata;
+
+/* compiled from: SemanticsSort.kt */
+@Metadata(d1 = {"\u0000\u001c\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\b\u0003\n\u0002\u0010\b\n\u0002\b\u0003\bÂ\u0002\u0018\u00002\u0012\u0012\u0004\u0012\u00020\u00020\u0001j\b\u0012\u0004\u0012\u00020\u0002`\u0003B\t\b\u0002¢\u0006\u0004\b\u0004\u0010\u0005J\u0018\u0010\u0006\u001a\u00020\u00072\u0006\u0010\b\u001a\u00020\u00022\u0006\u0010\t\u001a\u00020\u0002H\u0016¨\u0006\n"}, d2 = {"Landroidx/compose/ui/semantics/LtrBoundsComparator;", "Ljava/util/Comparator;", "Landroidx/compose/ui/semantics/SemanticsNode;", "Lkotlin/Comparator;", "<init>", "()V", "compare", "", "a", "b", "ui_release"}, k = 1, mv = {2, 0, 0}, xi = 48)
+/* loaded from: classes.dex */
+final class LtrBoundsComparator implements Comparator<SemanticsNode> {
+    public static final LtrBoundsComparator INSTANCE = new LtrBoundsComparator();
+
+    private LtrBoundsComparator() {
+    }
+
+    @Override // java.util.Comparator
+    public int compare(SemanticsNode a, SemanticsNode b) {
+        Rect boundsInWindow = a.getBoundsInWindow();
+        Rect boundsInWindow2 = b.getBoundsInWindow();
+        int compare = Float.compare(boundsInWindow.getLeft(), boundsInWindow2.getLeft());
+        if (compare != 0) {
+            return compare;
+        }
+        int compare2 = Float.compare(boundsInWindow.getTop(), boundsInWindow2.getTop());
+        if (compare2 != 0) {
+            return compare2;
+        }
+        int compare3 = Float.compare(boundsInWindow.getBottom(), boundsInWindow2.getBottom());
+        return compare3 != 0 ? compare3 : Float.compare(boundsInWindow.getRight(), boundsInWindow2.getRight());
+    }
+}
