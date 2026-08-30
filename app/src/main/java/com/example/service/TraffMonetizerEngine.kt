@@ -216,7 +216,6 @@ object TraffMonetizerEngine {
       instanceId = instanceId,
       wifiOnly = settings.wifiOnly,
       deviceName = deviceName,
-      appVersion = "1.0",
     )
 
     appendLog(LogLevel.INFO, "Starting TraffMonetizer node (SDK-compatible client ${NodeConfig.SDK_VERSION}).", "NODE")

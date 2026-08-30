@@ -119,7 +119,9 @@ internal class InboundParser(private val input: DataInputStream) {
         value = Wire.readLongLe(input),
       )
 
-      // Types the server never sends to a node (they are node -> server only).
+      // Types the server never sends to a node (they are node -> server only),
+      // plus responses that only answer requests this client never makes
+      // (content delivery).
       MessageType.NONE,
       MessageType.HELLO,
       MessageType.BYE,
@@ -129,8 +131,13 @@ internal class InboundParser(private val input: DataInputStream) {
       MessageType.STAT_MESSAGE,
       MessageType.BALANCE_MESSAGE,
       MessageType.UDP_PACKET,
+      MessageType.LOG_MESSAGE,
       MessageType.SET_NAME_MESSAGE,
-      MessageType.GET_NAME_MESSAGE -> InboundMessage.Unhandled(type)
+      MessageType.GET_NAME_MESSAGE,
+      MessageType.ACCEPT_CONTENT_DELIVERY_MESSAGE,
+      MessageType.CONTENT_DELIVERY_STAT_MESSAGE,
+      MessageType.ACCEPT_CONTENT_DELIVERY_RESPONSE,
+      MessageType.CONTENT_DELIVERY_STAT_RESPONSE -> InboundMessage.Unhandled(type)
     }
   }
 

@@ -4,26 +4,39 @@ import java.io.DataInputStream
 import java.io.OutputStream
 
 /**
- * Little-endian primitives used by the TraffMonetizer wire protocol.
- *
- * Derived from the reference SDK's serialization helpers
- * (`com.tm.AbstractC0099h`, originally `com.traffmonetizer.sdk.repository.api.ByteExtKt`):
- *  - int   -> 4 bytes, little-endian
- *  - long  -> 8 bytes, little-endian (read path only in the reference)
- *  - String-> 4-byte little-endian length followed by the UTF-8 bytes
- *
- * Note on the string length: the reference writes `str.length()` (the number of
- * UTF-16 chars) and then appends the UTF-8 encoded bytes. For ASCII payloads
- * (tokens, version strings, host names) these are identical. We reproduce the
- * reference exactly by writing the UTF-8 byte count, which matches for all
- * inputs the protocol actually carries and is what the server needs to frame
- * the field correctly.
+ * Wire primitives for the TraffMonetizer protocol, verified against the cli_v2
+ * binary (v1.3.3):
+ *  - integers are LITTLE-ENDIAN (read_u32 0x6f445 / read_u64 0x6f4ce write
+ *    with no bswap; write_u32 0x6d282)
+ *  - String = 4-byte LE length + UTF-8 bytes, 0 < len <= 1 MiB
+ *    (read_string 0x6f8be: `cmpl $0x100000, %esi; jbe`)
+ *  - the 16-byte instance id is a UUID written in MIXED-ENDIAN (Microsoft GUID)
+ *    layout: the encoder 0x6c0aa does `rolw $8` on the first four u16s of the
+ *    in-memory RFC 4122 bytes and copies the last 8 verbatim — i.e. the first
+ *    4 bytes reversed, bytes 4-7 pair-swapped. The decoder 0x41907 is the
+ *    exact inverse. This matches uuid::Uuid::to_bytes_le().
  */
 internal object Wire {
 
   fun intLe(value: Int): ByteArray = ByteArray(4) { i -> (value shr (i * 8)).toByte() }
 
   fun longLe(value: Long): ByteArray = ByteArray(8) { i -> (value shr (i * 8)).toByte() }
+
+  /**
+   * Instance id in GUID (mixed-endian) order, as the server expects it.
+   *
+   * @param id 16 bytes in RFC 4122 (uuid.as_bytes()) order
+   */
+  fun instanceIdGuid(id: ByteArray): ByteArray {
+    require(id.size == 16) { "instance id must be 16 bytes" }
+    return byteArrayOf(
+      id[3], id[2], id[1], id[0],
+      id[5], id[4],
+      id[7], id[6],
+      id[8], id[9], id[10], id[11],
+      id[12], id[13], id[14], id[15],
+    )
+  }
 
   fun string(value: String): ByteArray {
     val bytes = value.toByteArray(Charsets.UTF_8)

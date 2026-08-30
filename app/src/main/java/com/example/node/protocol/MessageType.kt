@@ -1,13 +1,13 @@
 package com.example.node.protocol
 
 /**
- * TraffMonetizer wire message types.
+ * Message type codes on the TraffMonetizer wire.
  *
- * Reproduced from the reference SDK's `com.tm.EnumC0052a1`
- * (originally `com.traffmonetizer.sdk.repository.api.command.MessageType`).
- * The byte written on the wire is the enum's ordinal, so the declaration order
- * below is significant and must match the reference exactly — including the
- * entries this client never sends.
+ * Extracted from the production cli_v2 client (v1.3.3): client -> server
+ * messages occupy codes 0..20, server -> client responses occupy 101..115.
+ * Verified against the binary's serializer dispatch tables (0x1ad31c /
+ * 0x1ad370) and its Debug name table — every name below matches the binary's
+ * string blob byte for byte.
  */
 internal enum class MessageType(val code: Int) {
   NONE(0),
@@ -23,28 +23,34 @@ internal enum class MessageType(val code: Int) {
   BALANCE_MESSAGE(10),
   UDP_PACKET(11),
   PING_MESSAGE(12),
-  SET_NAME_MESSAGE(13),
-  GET_NAME_MESSAGE(14),
-  UDP_BIND_MESSAGE(15),
-  CONNECT_V2(16),
-  ACK(17),
-  HELLO_RESPONSE(18),
-  BYE_RESPONSE(19),
-  FETCH_RESPONSE(20),
-  PACKET_RESPONSE(21),
-  ACCEPT_READY_RESPONSE(22),
-  ACCEPT_UNREADY_RESPONSE(23),
-  CONNECT_RESPONSE(24),
-  EOF_RESPONSE(25),
-  STAT_RESPONSE(26),
-  BALANCE_RESPONSE(27),
-  PONG_RESPONSE(28),
-  SET_NAME_RESPONSE(29),
-  GET_NAME_RESPONSE(30);
+  LOG_MESSAGE(13),
+  SET_NAME_MESSAGE(14),
+  GET_NAME_MESSAGE(15),
+  UDP_BIND_MESSAGE(16),
+  ACCEPT_CONTENT_DELIVERY_MESSAGE(17),
+  CONTENT_DELIVERY_STAT_MESSAGE(18),
+  CONNECT_V2(19),
+  ACK(20),
+
+  // Server -> client responses.
+  HELLO_RESPONSE(101),
+  BYE_RESPONSE(102),
+  FETCH_RESPONSE(103),
+  PACKET_RESPONSE(104),
+  ACCEPT_READY_RESPONSE(105),
+  ACCEPT_UNREADY_RESPONSE(106),
+  CONNECT_RESPONSE(107),
+  EOF_RESPONSE(108),
+  STAT_RESPONSE(109),
+  BALANCE_RESPONSE(110),
+  PONG_RESPONSE(111),
+  SET_NAME_RESPONSE(112),
+  GET_NAME_RESPONSE(113),
+  ACCEPT_CONTENT_DELIVERY_RESPONSE(114),
+  CONTENT_DELIVERY_STAT_RESPONSE(115);
 
   companion object {
     private val byCode = entries.associateBy { it.code }
-
     fun fromCode(code: Int): MessageType? = byCode[code]
   }
 }

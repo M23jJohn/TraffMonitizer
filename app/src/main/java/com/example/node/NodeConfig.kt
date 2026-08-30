@@ -4,15 +4,13 @@ package com.example.node
  * Node configuration, mirroring the reference SDK's `com.tm.C0148o`
  * (`com.traffmonetizer.sdk.repository.config.Config`).
  *
- * Production constants come from `com.tm.AbstractC0162q`:
- *   balancerHost = "blnc.traffmonetizer.com", apiPort = 769, sdkVersion = "1.2.11"
- * The reference also carries a development profile (srv.traffmonetizer.com:8869)
- * which this app does not use.
+ * Production constants verified against the cli_v2 client binary (v1.3.3):
+ *   balancerHost = "blnc.traffmonetizer.com", apiPort = 769, sdkVersion = "1.3.3"
  */
 internal data class NodeConfig(
   /** User-supplied application token. Never logged, never persisted outside SharedPreferences. */
   val token: String,
-  /** 16-byte device identity, MD5 of Settings.Secure.ANDROID_ID (reference: com.tm.C0155p). */
+  /** 16-byte device identity: a UUID derived from Settings.Secure.ANDROID_ID. */
   val instanceId: ByteArray,
   val wifiOnly: Boolean,
   /** Optional device alias sent via SET_NAME_MESSAGE; blank means "don't set a name". */
@@ -22,15 +20,13 @@ internal data class NodeConfig(
   /** Non-blank pins the node to a fixed server, skipping load-balancer resolution. */
   val serverHost: String = "",
   val sdkVersion: String = SDK_VERSION,
-  val appVersion: String = "",
 ) {
   /**
-   * Version string sent in HELLO. The reference (`com.tm.C5`) builds
-   * `"<sdkVersion>/sdk"` for bare-SDK builds and `"<sdkVersion>/app/<appVersion>"`
-   * when an app version is supplied.
+   * Version string sent in HELLO. cli_v2 sends the bare version — the handshake
+   * builds `String("1.3.3")` with no suffix (0x5530d) — so we do too.
    */
   val helloVersion: String
-    get() = if (appVersion.isBlank()) "$sdkVersion/sdk" else "$sdkVersion/app/$appVersion"
+    get() = sdkVersion
 
   // Generated equals/hashCode would compare instanceId by reference.
   override fun equals(other: Any?): Boolean {
@@ -43,8 +39,7 @@ internal data class NodeConfig(
       balancerHost == other.balancerHost &&
       apiPort == other.apiPort &&
       serverHost == other.serverHost &&
-      sdkVersion == other.sdkVersion &&
-      appVersion == other.appVersion
+      sdkVersion == other.sdkVersion
   }
 
   override fun hashCode(): Int {
@@ -56,7 +51,6 @@ internal data class NodeConfig(
     result = 31 * result + apiPort
     result = 31 * result + serverHost.hashCode()
     result = 31 * result + sdkVersion.hashCode()
-    result = 31 * result + appVersion.hashCode()
     return result
   }
 
@@ -68,7 +62,7 @@ internal data class NodeConfig(
   companion object {
     const val BALANCER_HOST = "blnc.traffmonetizer.com"
     const val API_PORT = 769
-    const val SDK_VERSION = "1.2.11"
+    const val SDK_VERSION = "1.3.3"
 
     /** deviceType value the reference SDK sends in HELLO (com.tm.O0). */
     const val DEVICE_TYPE_ANDROID = 3
